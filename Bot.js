@@ -34,10 +34,10 @@ if (ADMIN_IDS.length === 0) {
 }
 
 const BOT_NAME             = process.env.BOT_NAME || '⚡ WA Kicker Bot';
-const PAYMENT_BANK_NAME    = process.env.PAYMENT_BANK_NAME   || 'BCA';
+const PAYMENT_BANK_NAME    = process.env.PAYMENT_BANK_NAME   || 'SEA';
 const PAYMENT_BANK_NUMBER  = process.env.PAYMENT_BANK_NUMBER || '1234567890';
 const PAYMENT_BANK_HOLDER  = process.env.PAYMENT_BANK_HOLDER || 'Bot Owner';
-const PAYMENT_DANA        = process.env.PAYMENT_DANA       || '081234567890';
+const PAYMENT_DANA         = process.env.PAYMENT_DANA       || '081234567890';
 const PAYMENT_CONTACT      = process.env.PAYMENT_CONTACT     || '@adminusername';
 const TRIAL_DURATION_HOURS = parseInt(process.env.TRIAL_DURATION_HOURS || '24');
 
@@ -1050,6 +1050,38 @@ tgBot.command('myaccount', async (ctx) => {
     await ctx.reply(`👤 ${userDisplayNameEsc(u)}\n🆔 ${u.id}\nStatus: ${status}\nExp: ${u.expiresAt ? formatDate(u.expiresAt) : u.trialExpiresAt ? formatDate(u.trialExpiresAt) : '-'}`, { parse_mode: 'Markdown' });
 });
 
+tgBot.command('help', async (ctx) => {
+    await ctx.reply(
+        "╔━━━━━━━━━━━━━━━━━━━━━━╗\n" +
+        "║  PANDUAN PENGGUNAAN\n" +
+        "╚━━━━━━━━━━━━━━━━━━━━━━╝\n\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
+        "*📌 CARA PAKAI BOT:*\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
+        "*1. Daftar & Aktifkan Akses*\n" +
+        "   Tekan 🎁 Coba Gratis untuk trial gratis 24 jam\n" +
+        "   Tekan ⭐ Premium untuk beli paket reguler\n\n" +
+        "*2. Login WhatsApp*\n" +
+        "   Tekan 🔑 Login WhatsApp\n" +
+        "   → Scan QR di WA lo\n\n" +
+        "*3. Pilih Grup*\n" +
+        "   Tekan 📋 Daftar Grup — Lihat semua grup\n" +
+        "   Tekan 🎯 Pilih Grup → ketik: /select \"Nama Grup\"\n\n" +
+        "*4. Kick Anggota*\n" +
+        "   Tekan 🔴 Kick Menu\n" +
+        "   → Centang anggota yang mau dikick\n" +
+        "   → Tekan tombol \"Kick\"\n\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
+        "*⚠️ PENTING:*\n" +
+        "• Bot hanya bisa kick jika lo adalah *admin grup*\n" +
+        "• Akun WA yang login harus jadi *admin* di grup target\n" +
+        "• Trial hanya bisa akses *1 grup*\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
+        `Butuh bantuan? Hubungi ${PAYMENT_CONTACT}`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
 tgBot.command('pendingpayment', async (ctx) => {
     if (!isAdmin(ctx.from.id)) return;
     const list = getAllPendingPayments();
@@ -1062,15 +1094,59 @@ tgBot.command('pendingpayment', async (ctx) => {
 });
 
 tgBot.command('userlist', async (ctx) => {
-    if (!isAdmin(ctx.from.id)) return;
+    if (!isAdmin(ctx.from.id)) return ctx.reply('⛔ Akses ditolak.');
+
     const users = getAllUsers();
-    if (users.length === 0) return ctx.reply(`Belum ada user.`);
-    let msg = `TOTAL: ${users.length}\n\n`;
-    users.slice(0, 20).forEach(u => {
+    if (users.length === 0) return ctx.reply('*Belum ada user terdaftar.*', { parse_mode: 'Markdown' });
+
+    const now = new Date();
+    const actives = users.filter(u => {
         const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-        msg += `${u.id} | ${u.role} | ${exp ? formatDate(exp) : '-'}\n`;
+        return exp && new Date(exp) > now;
     });
-    await ctx.reply(msg);
+    const expired = users.filter(u => {
+        const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+        return !exp || new Date(exp) <= now;
+    });
+
+    let msg = "╔━━━━━━━━━━━━━━━━━━━━━━╗\n";
+    msg += "║  DAFTAR USER\n";
+    msg += "╚━━━━━━━━━━━━━━━━━━━━━━╝\n\n";
+    msg += `✅ Aktif: ${actives.length}  |  ❌ Expired: ${expired.length}\n\n`;
+
+    if (actives.length > 0) {
+        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+        msg += "✅ USER AKTIF:\n";
+        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+        
+        for (let i = 0; i < actives.length; i++) {
+            const u = actives[i];
+            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+            const role = u.role === 'trial' ? '🎁 Trial' : '⭐ Reguler';
+            const sisa = formatCountdown(exp);
+            
+            msg += `${i + 1}. ${userDisplayName(u)}\n`;
+            msg += `   ID: \`${u.id}\` | ${role}\n`;
+            msg += `   Exp: ${formatDate(exp)} (${sisa})\n\n`;
+        }
+    }
+
+    if (expired.length > 0 && expired.length <= 10) {
+        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+        msg += "❌ EXPIRED:\n";
+        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+        expired.forEach((u, i) => {
+            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+            msg += `${i + 1}. ${userDisplayName(u)} | ID: \`${u.id}\`\n`;
+            msg += `   Expired: ${formatDate(exp)}\n\n`;
+        });
+    } else if (expired.length > 10) {
+        msg += `\n_(+${expired.length} user expired tidak ditampilkan)_\n\n`;
+    }
+
+    msg += `\n/revokeuser [id] — Cabut akses`;
+
+    await ctx.reply(msg, { parse_mode: 'Markdown' });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -1221,38 +1297,6 @@ tgBot.hears('🚪 Logout WhatsApp', requireAccess, async (ctx) => {
     }
 });
 
-tgBot.command('help', async (ctx) => {
-    await ctx.reply(
-        "╔━━━━━━━━━━━━━━━━━━━━━━╗\n" +
-        "║  PANDUAN PENGGUNAAN\n" +
-        "╚━━━━━━━━━━━━━━━━━━━━━━╝\n\n" +
-        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
-        "*📌 CARA PAKAI BOT:*\n" +
-        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
-        "*1. Daftar & Aktifkan Akses*\n" +
-        "   Tekan 🎁 Coba Gratis untuk trial gratis 24 jam\n" +
-        "   Tekan ⭐ Premium untuk beli paket reguler\n\n" +
-        "*2. Login WhatsApp*\n" +
-        "   Tekan 🔑 Login WhatsApp\n" +
-        "   → Scan QR di WA lo\n\n" +
-        "*3. Pilih Grup*\n" +
-        "   Tekan 📋 Daftar Grup — Lihat semua grup\n" +
-        "   Tekan 🎯 Pilih Grup → ketik: /select \"Nama Grup\"\n\n" +
-        "*4. Kick Anggota*\n" +
-        "   Tekan 🔴 Kick Menu\n" +
-        "   → Centang anggota yang mau dikick\n" +
-        "   → Tekan tombol \"Kick\"\n\n" +
-        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
-        "*⚠️ PENTING:*\n" +
-        "• Bot hanya bisa kick jika lo adalah *admin grup*\n" +
-        "• Akun WA yang login harus jadi *admin* di grup target\n" +
-        "• Trial hanya bisa akses *1 grup*\n" +
-        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
-        `Butuh bantuan? Hubungi ${PAYMENT_CONTACT}`,
-        { parse_mode: 'Markdown' }
-    );
-});
-
 tgBot.hears('📋 Pending Payment', async (ctx) => {
     if (!isAdmin(ctx.from.id)) return;
     const list = getAllPendingPayments();
@@ -1264,60 +1308,16 @@ tgBot.hears('📋 Pending Payment', async (ctx) => {
     await ctx.reply(msg);
 });
 
-tgBot.command('userlist', async (ctx) => {
-    if (!isAdmin(ctx.from.id)) return ctx.reply('⛔ Akses ditolak.');
-
+tgBot.hears('👥 User List', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return;
     const users = getAllUsers();
-    if (users.length === 0) return ctx.reply('*Belum ada user terdaftar.*', { parse_mode: 'Markdown' });
-
-    const now = new Date();
-    const actives = users.filter(u => {
+    if (users.length === 0) return ctx.reply(`Belum ada user.`);
+    let msg = `TOTAL: ${users.length}\n\n`;
+    users.slice(0, 20).forEach(u => {
         const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-        return exp && new Date(exp) > now;
+        msg += `${u.id} | ${u.role} | ${exp ? formatDate(exp) : '-'}\n`;
     });
-    const expired = users.filter(u => {
-        const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-        return !exp || new Date(exp) <= now;
-    });
-
-    let msg = "╔━━━━━━━━━━━━━━━━━━━━━━╗\n";
-    msg += "║  DAFTAR USER\n";
-    msg += "╚━━━━━━━━━━━━━━━━━━━━━━╝\n\n";
-    msg += `✅ Aktif: ${actives.length}  |  ❌ Expired: ${expired.length}\n\n`;
-
-    if (actives.length > 0) {
-        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
-        msg += "✅ USER AKTIF:\n";
-        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
-        
-        for (let i = 0; i < actives.length; i++) {
-            const u = actives[i];
-            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-            const role = u.role === 'trial' ? '🎁 Trial' : '⭐ Reguler';
-            const sisa = formatCountdown(exp);
-            
-            msg += `${i + 1}. ${userDisplayName(u)}\n`;
-            msg += `   ID: \`${u.id}\` | ${role}\n`;
-            msg += `   Exp: ${formatDate(exp)} (${sisa})\n\n`;
-        }
-    }
-
-    if (expired.length > 0 && expired.length <= 10) {
-        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
-        msg += "❌ EXPIRED:\n";
-        msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
-        expired.forEach((u, i) => {
-            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-            msg += `${i + 1}. ${userDisplayName(u)} | ID: \`${u.id}\`\n`;
-            msg += `   Expired: ${formatDate(exp)}\n\n`;
-        });
-    } else if (expired.length > 10) {
-        msg += `\n_(+${expired.length} user expired tidak ditampilkan)_\n\n`;
-    }
-
-    msg += `\n/revokeuser [id] — Cabut akses`;
-
-    await ctx.reply(msg, { parse_mode: 'Markdown' });
+    await ctx.reply(msg);
 });
 
 // ══════════════════════════════════════════════════════════════
