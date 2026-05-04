@@ -1167,7 +1167,38 @@ tgBot.hears('🎁 Coba Gratis (Trial)', async (ctx) => {
 });
 
 tgBot.hears('⭐ Premium', async (ctx) => { await showPriceMenu(ctx); });
-tgBot.hears('❓ Bantuan', async (ctx) => { await ctx.reply(`Butuh bantuan? Hubungi ${PAYMENT_CONTACT}`, { parse_mode: 'Markdown' }); });
+
+tgBot.hears('❓ Bantuan', async (ctx) => {
+    await ctx.reply(
+        "╔━━━━━━━━━━━━━━━━━━━━━━╗\n" +
+        "║  PANDUAN PENGGUNAAN\n" +
+        "╚━━━━━━━━━━━━━━━━━━━━━━╝\n\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
+        "*📌 CARA PAKAI BOT:*\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
+        "*1. Daftar & Aktifkan Akses*\n" +
+        "   Tekan 🎁 Coba Gratis untuk trial gratis 24 jam\n" +
+        "   Tekan ⭐ Premium untuk beli paket reguler\n\n" +
+        "*2. Login WhatsApp*\n" +
+        "   Tekan 🔑 Login WhatsApp\n" +
+        "   → Scan QR di WA lo\n\n" +
+        "*3. Pilih Grup*\n" +
+        "   Tekan 📋 Daftar Grup — Lihat semua grup\n" +
+        "   Tekan 🎯 Pilih Grup → ketik: /select \"Nama Grup\"\n\n" +
+        "*4. Kick Anggota*\n" +
+        "   Tekan 🔴 Kick Menu\n" +
+        "   → Centang anggota yang mau dikick\n" +
+        "   → Tekan tombol \"Kick\"\n\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n" +
+        "*⚠️ PENTING:*\n" +
+        "• Bot hanya bisa kick jika lo adalah *admin grup*\n" +
+        "• Akun WA yang login harus jadi *admin* di grup target\n" +
+        "• Trial hanya bisa akses *1 grup*\n" +
+        "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n" +
+        `Butuh bantuan? Hubungi ${PAYMENT_CONTACT}`,
+        { parse_mode: 'Markdown' }
+    );
+});
 
 tgBot.hears('🔑 Login WhatsApp', requireAccess, async (ctx) => {
     const userId = ctx.from.id;
