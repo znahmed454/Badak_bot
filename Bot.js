@@ -1149,6 +1149,70 @@ tgBot.command('userlist', async (ctx) => {
     await ctx.reply(msg, { parse_mode: 'Markdown' });
 });
 
+tgBot.command('revokeuser', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return ctx.reply('⛔ Akses ditolak.');
+
+    const args = ctx.message.text.split(' ');
+    const targetId = parseInt(args[1]);
+    if (!targetId) return ctx.reply(`*Format:* /revokeuser [user_id]`, { parse_mode: 'Markdown' });
+
+    const user = revokeUser(targetId);
+    if (!user) return ctx.reply(`❌ User ID ${targetId} tidak ditemukan.`);
+
+    if (userSessions.has(targetId)) {
+        const session = userSessions.get(targetId);
+        if (session.qrTimer) clearTimeout(session.qrTimer);
+        try { session.sock.end(new Error('revoked')); } catch (_) {}
+        userSessions.delete(targetId);
+    }
+
+    await ctx.reply(`🚫 Akses ${userDisplayName(user)} (ID: ${targetId}) dicabut.`);
+
+    try {
+        await tgBot.telegram.sendMessage(targetId,
+            `⚠️ *Akses lo ke ${BOT_NAME} telah dicabut oleh admin.*\n\n` +
+            `Hubungi ${PAYMENT_CONTACT} jika ada pertanyaan.`,
+            { parse_mode: 'Markdown', ...KB_LANDING }
+        );
+    } catch (_) {}
+});
+
+tgBot.command('adduser', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return ctx.reply('⛔ Akses ditolak.');
+
+    const args = ctx.message.text.split(' ');
+    const targetId = parseInt(args[1]);
+    const pkgKey = args[2];
+
+    if (!targetId || !pkgKey || !PACKAGES[pkgKey]) {
+        return ctx.reply(
+            `*Format:* /adduser [user_id] [paket]\n\nPaket: 1bulan / 3bulan / 6bulan / 1tahun`,
+            { parse_mode: 'Markdown' }
+        );
+    }
+
+    const result = approvePayment(targetId, pkgKey);
+    if (!result.success) return ctx.reply(`❌ Gagal: ${result.reason}`);
+
+    await ctx.reply(
+        `✅ *User berhasil ditambahkan!*\n\n` +
+        `🆔 ID: \`${targetId}\`\n` +
+        `📦 Paket: *${result.pkg.label}*\n` +
+        `📅 Aktif hingga: *${formatDate(result.expiresAt.toISOString())}*`,
+        { parse_mode: 'Markdown' }
+    );
+
+    try {
+        await tgBot.telegram.sendMessage(targetId,
+            `🎉 *Akses ke ${BOT_NAME} sudah diaktifkan!*\n\n` +
+            `📦 Paket: *${result.pkg.label}*\n` +
+            `📅 Aktif hingga: *${formatDate(result.expiresAt.toISOString())}*\n\n` +
+            `Tekan *🔑 Login WhatsApp* untuk mulai.`,
+            { parse_mode: 'Markdown', ...KB_PRE_LOGIN }
+        );
+    } catch (_) {}
+});
+
 // ══════════════════════════════════════════════════════════════
 //  HEARS HANDLERS (NON-COMMAND TEXT BUTTONS)
 // ══════════════════════════════════════════════════════════════
