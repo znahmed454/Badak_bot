@@ -1340,15 +1340,48 @@ tgBot.hears('📋 Pending Payment', async (ctx) => {
 });
 
 tgBot.hears('👥 User List', async (ctx) => {
-    if (!isAdmin(ctx.from.id)) return;
+    if (!isAdmin(ctx.from.id)) return ctx.reply('⛔ Akses ditolak.');
+
     const users = getAllUsers();
-    if (users.length === 0) return ctx.reply(`Belum ada user.`);
-    let msg = `TOTAL: ${users.length}\n\n`;
-    users.slice(0, 20).forEach(u => {
+    if (users.length === 0) return ctx.reply('*Belum ada user terdaftar.*', { parse_mode: 'Markdown' });
+
+    const now = new Date();
+    const actives = users.filter(u => {
         const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
-        msg += `${u.id} | ${u.role} | ${exp ? formatDate(exp) : '-'}\n`;
+        return exp && new Date(exp) > now;
     });
-    await ctx.reply(msg);
+    const expired = users.filter(u => {
+        const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+        return !exp || new Date(exp) <= now;
+    });
+
+    let msg = `╔${DIVIDER}╗\n║  DAFTAR USER\n╚${DIVIDER}╝\n\n`;
+    msg += `✅ Aktif: ${actives.length}  |  ❌ Expired: ${expired.length}\n\n`;
+
+    if (actives.length > 0) {
+        msg += `${DIVIDER_THIN}\n✅ USER AKTIF:\n${DIVIDER_THIN}\n`;
+        actives.forEach((u, i) => {
+            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+            const role = u.role === 'trial' ? '🎁 Trial' : '⭐ Reguler';
+            msg += `${i + 1}. ${userDisplayName(u)}\n`;
+            msg += `   ID: \`${u.id}\` | ${role}\n`;
+            msg += `   Exp: ${formatDate(exp)} (${formatCountdown(exp)})\n\n`;
+        });
+    }
+
+    if (expired.length > 0 && expired.length <= 10) {
+        msg += `${DIVIDER_THIN}\n❌ EXPIRED:\n${DIVIDER_THIN}\n`;
+        expired.forEach((u, i) => {
+            const exp = u.role === 'trial' ? u.trialExpiresAt : u.expiresAt;
+            msg += `${i + 1}. ${userDisplayName(u)} | ID: \`${u.id}\`\n`;
+            msg += `   Expired: ${formatDate(exp)}\n\n`;
+        });
+    } else if (expired.length > 10) {
+        msg += `\n_(+${expired.length} user expired tidak ditampilkan)_`;
+    }
+
+    msg += `\n\n/revokeuser [id] — Cabut akses`;
+    await ctx.reply(msg, { parse_mode: 'Markdown' });
 });
 
 // ══════════════════════════════════════════════════════════════
