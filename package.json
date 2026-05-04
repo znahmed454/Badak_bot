@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@adiwajshing/keyed-db": "^0.2.4",
+    "@whiskeysockets/baileys": "^6.5.0",
+    "buffer": "^6.0.3",
+    "dotenv": "^17.4.2",
+    "libphonenumber-js": "^1.12.42",
+    "pino": "^8.0.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "telegraf": "^4.16.3"
+  }
+}

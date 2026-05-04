@@ -1,0 +1,17 @@
+{
+  "users": [
+    {
+      "id": 8702626088,
+      "username": "Mhmmad343",
+      "firstName": "Mohammed",
+      "lastName": "",
+      "role": "trial",
+      "trialStartedAt": "2026-05-04T11:07:37.135Z",
+      "trialExpiresAt": "2026-05-05T11:07:37.135Z",
+      "hadTrial": true,
+      "createdAt": "2026-05-04T11:07:37.135Z"
+    }
+  ],
+  "pending": [],
+  "pendingPayment": []
+}
